@@ -28,7 +28,7 @@ export default class Login extends Component {
     console.log(this.state.email, this.state.password);
 
     const response = await fetch(
-      `/api/login?email=${this.state.email}&password=${this.state.password}`);
+      `/api/targets?email=${this.state.email}&password=${this.state.password}`);
     const body = await response.json();
     if (response.status !== 200) throw Error(body.message);
 

@@ -1,35 +1,43 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const dotenv = require('dotenv');
+const debug = require('debug')('hvc:app')
 
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
 
-LOGIN_POPUP_BTN = '#loginli > button';
-EMAIL_INPUT = '#usernameBox';
-PASSWORD_INPUT = '#login_user_form > input:nth-child(2)';
-LOGIN_BTN = '#login-button';
+const LOGIN_POPUP_BTN = '#loginli > button';
+const EMAIL_INPUT = '#usernameBox';
+const PASSWORD_INPUT = '#login_user_form > input:nth-child(2)';
+const LOGIN_BTN = '#login-button';
+const INVALID_LOGIN = '#email_error';
 
-// TARGETS = "#cronometerApp > div > div:nth-child(1) > div > table > tbody > tr > " 
-//   + "td:nth-child(2) > div > div.GL-TVABCGUB.diary_side_box > div:nth-child(3) > div";
-
-TARGETS = "#cronometerApp > div > div:nth-child(1) > div > table > tbody > tr > " 
+const TARGETS = "#cronometerApp > div > div:nth-child(1) > div > table > tbody > tr > " 
   + "td:nth-child(2) > div > div.GL-TVABCGUB.diary_side_box";
+const ALL_TARGETS = TARGETS + " div.GL-TVABCOT";
 
-app.get('/api/home', async (req, res) => {
+const puppeteerOptions = {};
+if (process.env.HEADLESS === 'false' || process.env.HEADLESS === '0') {
+  puppeteerOptions.headless = false;
+  debug('Running with GUI');
+}
+else {
+  debug('Running headless');
+}
+
+
+app.get('/api/targets', async (req, res) => {
 
   let email = req.query.email;
   let password = req.query.password;
 
-  let options = {};
+  debug(`Got /api/targets request: ${email}`);
 
-  if (process.env.HEADLESS === 'false' || process.env.HEADLESS === '0') {
-    options.headless = false;
-  }
+  debug('Login in...');
 
-  const browser = await puppeteer.launch(options);
+  const browser = await puppeteer.launch(puppeteerOptions);
   const page = await browser.newPage();
   
   await page.goto(process.env.SITE_URL);
@@ -45,18 +53,80 @@ app.get('/api/home', async (req, res) => {
 
   await page.click(LOGIN_BTN);
 
-  await page.waitForNavigation();
+  page.waitFor(INVALID_LOGIN, { visible: true }).then(async () => {
+    debug('Invalid login');
+    res.send({error: 'login invalid'});
+    browser.close();
+  }).catch(targetClosedErrorHandler);
 
-  //await page.waitFor(10000);
-  console.log('waiting...');
+  page.waitForSelector(ALL_TARGETS).then(async () => {
+    debug('Login OK');
+    debug('Got targets div selector, waiting for 3s...');
+    await page.waitFor(3000);
 
-  let sel = "#cronometerApp > div > div:nth-child(1) > div > table > tbody > tr > td:nth-child(2) > div > div.GL-TVABCGUB.diary_side_box div.GL-TVABCOT";
+    debug('Getting targets....');
 
-  let fiberSelector = TARGETS + " div.GL-TVABCOT";
-  await page.waitForSelector(fiberSelector);
-  console.log('got selector, waiting for 3s');
+    let targets = await getTargets(page);
+    browser.close();
 
-  await page.waitFor(3000);
+    debug('All done');
+
+    res.send({ targets: targets });
+  }).catch(targetClosedErrorHandler);
+
+});
+
+let targetClosedErrorHandler = (err) => {
+  if (err.message && err.message.indexOf('Target closed') !== -1) {
+    return;
+  }
+  debug(`Error waiting for invalid login ${err.message}`);
+}
+
+let getTargets = async (page) => {
+  const hoverSel = TARGETS + " > div:nth-child(3) > div > div:nth-child(2)";
+
+  let targetArray = await getTargetValues(page);
+
+  for (let i = 2; i <= 8; i++) {
+    await fetchHoverValue(page, targetArray, i);
+  }
+
+  let targets = parseTargetValues(targetArray);
+
+  return targets;
+}
+
+let fetchHoverValue = async (page, targetArray, index) => {
+  const hoverSel = TARGETS + ` > div:nth-child(3) > div > div:nth-child(${index})`;
+  await page.hover(hoverSel);
+  debug(`Fetching hover value index (${index})`);
+
+  await page.waitFor(100);
+
+  let values = await getTargetValues(page);
+  let targetArrayIndex = index - 1;
+  let hoverVal = values[targetArrayIndex].join("");
+
+  targetArray[targetArrayIndex][2] = hoverVal;
+
+  return hoverVal;
+}
+
+let parseTargetValues = (data) => {
+  let result = {};
+  data.map(val => {
+    let percent = val[0];
+    let label = val[1];
+    let amount = val[2];
+    if (label === 'TARGETS') return;
+    result[label] = { percent: percent, amount: amount };
+  })
+  return result;  
+}
+
+let getTargetValues = async (page) => {
+  const ALL_TARGETS = TARGETS + " div.GL-TVABCOT";
 
   let result = await page.evaluate((sel) => {
     let divs = Array.from(document.querySelectorAll(sel));
@@ -67,23 +137,12 @@ app.get('/api/home', async (req, res) => {
       ] 
     });
     return data;
-  }, sel)
+  }, ALL_TARGETS)
 
-  /*
-  let divs = await page.$$eval(sel, (element) => {
-    return element.innerHTML;
-  });
-  */
+  return result;
+}
 
-  console.log('RES', result);
 
-  await page.waitFor(60000);
-  
-  browser.close();
 
-  res.send({ express: 'Hello From Express' });
-
-});
-
-app.listen(port, () => console.log(`Listening on port ${port}`));
+app.listen(port, () => debug(`Listening on port ${port}`));
 
