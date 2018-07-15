@@ -59,16 +59,59 @@ class App extends Component {
     'number=10&offset=0&random=false'
     */
   
-    this.api('findByNutrients?maxAlcohol=50')
+    this.fetchRecipes();
+  }
+
+  caclulateRequirements() {
+    let targets = this.state.targets;
+
+    for (let key of Object.keys(targets)) {
+      let { percent, amount } = targets[key];
+
+      let percentNum = percent.match(/(\d+)%/)[1];
+      let match = amount.match(/([\d|\\.]+)(.*)/);
+      let amountNum = match[1];
+      let amountUnit = match[2];
+
+      let requiredAmount = amountNum / percentNum * 100;
+
+      targets[key].required = requiredAmount;
+      targets[key].unit = amountUnit;
+      targets[key].current = amountNum;
+    }
+
+    this.setState( { targets: targets } );
+  }
+
+  fetchRecipes() {
+    this.caclulateRequirements();
+
+    let targets = this.state.targets;
+    console.log(targets);
+
+    let folateGrams = targets["Folate"].required * 1000;
+
+    let url = `findByNutrients?` 
+      + `mincalcium=${targets["Calcium"].required.toFixed(2)}&` 
+      + `minFiber=${targets["Fiber"].required.toFixed(2)}&`
+      //+ `minFolate=${folateGrams.toFixed(2)}&`
+      + `miniron=${targets["Iron"].required.toFixed(2)}&`
+      + `minVitaminA=${targets["Vit.A"].required.toFixed(2)}&`
+      + `minvitaminb12=${targets["Vit.B12"].required.toFixed(2)}&`
+      + `minvitaminc=${targets["Vit.C"].required.toFixed(2)}`
+
+    console.log(url);
+
+    this.api(url)
       .then(res => {
 
-        console.log("RES", res);
+        console.log("RES", res.data);
 
-        let calls = res.data.map(recipe => this.api(`${recipe.id}/information`) );
-        console.log(calls);
+        //let calls = res.data.map(recipe => this.api(`${recipe.id}/information`) );
 
         this.setState({ recipes: res.data });
       })
+ 
   }
 
   api(endpoint) {
@@ -84,7 +127,8 @@ class App extends Component {
     if (endpoint.indexOf('information') !== -1) {
       url = `recipeinfo.json`;
     }
-    else if (endpoint.indexOf('findByNutrients') !== -1) {
+
+    if (endpoint.indexOf('findByNutrients') !== -1) {
       url = `findbynutrients.json`;
     }
 
@@ -96,6 +140,7 @@ class App extends Component {
     console.log("Login complete! Targets:");
     console.log(targets);
     this.setState({ targets: targets });
+    this.fetchRecipes();
   }
 
   render() {
