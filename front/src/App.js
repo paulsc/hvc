@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
 import axios from 'axios';
+import Login from './Login';
+
 const HOST = "https://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes";
 
 class App extends Component {
@@ -10,6 +12,7 @@ class App extends Component {
   }
 
   componentDidMount() {
+    // https://market.mashape.com/spoonacular/recipe-food-nutrition#search-recipes-by-nutrients
     /*
     'maxAlcohol=50&maxCaffeine=50&maxcalcium=50&maxCalories=250&maxCarbs=100&'
     'maxcholesterol=50&maxcholine=50&maxcopper=50&maxFat=20&maxFiber=50&maxfluoride=50&'
@@ -29,6 +32,7 @@ class App extends Component {
     'number=10&offset=0&random=false'
     */
   
+    /*J
     this.api('findByNutrients?maxAlcohol=50')
       .then(res => {
 
@@ -37,6 +41,7 @@ class App extends Component {
 
         this.setState({ recipes: res.data });
       })
+    */
   }
 
   api(endpoint) {
@@ -52,6 +57,10 @@ class App extends Component {
   }
 
   render() {
+    return <Login />;
+  }
+
+  renderold() {
 
     let recipes = this.state.recipes.map(recipe => {
       return (<div key={"recipe-" + recipe.id}>{recipe.title}</div>);
