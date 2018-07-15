@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
+import { ListGroup, ListGroupItem } from "react-bootstrap";
+
 import './App.css';
 import axios from 'axios';
 import Login from './Login';
+
+// COLOR SCHEME: http://paletton.com/#uid=30i0u0kpYtfg6Dwlavqtrolwjjk
 
 const HOST = "https://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes";
 
@@ -9,18 +13,28 @@ class App extends Component {
 
   state = {
     recipes: [],
-    targets: {}
+    targets: {
+      "Calcium" : {percent: "2%", amount: "15.2mg"},
+      "Fiber" : {percent: "8%", amount: "3.1g"},
+      "Folate" : {percent: "6%", amount: "25.9µg"},
+      "Iron" : {percent: "10%", amount: "0.8mg"},
+      "Vit.A" : {percent: "3%", amount: "75.5IU"},
+      "Vit.B12" : {percent: "37%", amount: "0.9µg"},
+      "Vit.C" : {percent: "11%", amount: "10.3mg"}
+    }
   }
 
   /*
 
-Calcium : {percent: "2%", amount: "15.2mg"}
-Fiber : {percent: "8%", amount: "3.1g"}
-Folate : {percent: "6%", amount: "25.9µg"}
-Iron : {percent: "10%", amount: "0.8mg"}
-Vit.A : {percent: "3%", amount: "75.5IU"}
-Vit.B12 : {percent: "37%", amount: "0.9µg"}
-Vit.C : {percent: "11%", amount: "10.3mg"}
+    targets: {
+      "Calcium" : {percent: "2%", amount: "15.2mg"},
+      "Fiber" : {percent: "8%", amount: "3.1g"},
+      "Folate" : {percent: "6%", amount: "25.9µg"},
+      "Iron" : {percent: "10%", amount: "0.8mg"},
+      "Vit.A" : {percent: "3%", amount: "75.5IU"},
+      "Vit.B12" : {percent: "37%", amount: "0.9µg"},
+      "Vit.C" : {percent: "11%", amount: "10.3mg"}
+    }
 
   */
 
@@ -45,16 +59,16 @@ Vit.C : {percent: "11%", amount: "10.3mg"}
     'number=10&offset=0&random=false'
     */
   
-    /*J
     this.api('findByNutrients?maxAlcohol=50')
       .then(res => {
 
-        let calls = res.data.map(recipe => this.api(`/${recipe.id}/information`) );
+        console.log("RES", res);
+
+        let calls = res.data.map(recipe => this.api(`${recipe.id}/information`) );
         console.log(calls);
 
         this.setState({ recipes: res.data });
       })
-    */
   }
 
   api(endpoint) {
@@ -64,7 +78,16 @@ Vit.C : {percent: "11%", amount: "10.3mg"}
         'Accept': 'application/json'
       }
     }
+
     let url = `${HOST}/${endpoint}`;
+
+    if (endpoint.indexOf('information') !== -1) {
+      url = `recipeinfo.json`;
+    }
+    else if (endpoint.indexOf('findByNutrients') !== -1) {
+      url = `findbynutrients.json`;
+    }
+
     console.log('requesting...', url);
     return axios.get(url, options);
   }
@@ -85,8 +108,37 @@ Vit.C : {percent: "11%", amount: "10.3mg"}
 
   renderLoggedIn() {
 
+    let listitems = [];
+    for (let key of Object.keys(this.state.targets)) {
+      let target = this.state.targets[key];
+
+      let style = {
+        background: `linear-gradient(90deg, #FFA87F ${target.percent}, #ffffff ${target.percent})`
+      }
+
+      listitems.push(
+          <ListGroupItem key={key} style={style}>{key} - {target.amount} ({target.percent})</ListGroupItem>
+      );
+    }
+
+    let recipeitems = [];
+    for (let recipe of this.state.recipes) {
+      recipeitems.push(
+          <ListGroupItem key={recipe.id}>{recipe.title}</ListGroupItem>
+      );
+    }
+
     return (
-      <div>oh hai</div>
+      <div className="Content">
+        <ListGroup>
+          <ListGroupItem className="Targets-title">Today's Targets</ListGroupItem>
+          { listitems }
+        </ListGroup>
+        <ListGroup>
+          <ListGroupItem className="Meals-title">Meals</ListGroupItem>
+          { recipeitems }
+        </ListGroup>
+      </div>
     );
 
   }

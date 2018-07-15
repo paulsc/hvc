@@ -1,7 +1,29 @@
-.App {
+body {
   /* text-align: center; */
+  /* color: white; */
 }
 
+@media all and (min-width: 480px) {
+  .Content {
+    margin: 0 auto;
+    max-width: 400px;
+    padding: 25px 0px;
+  }
+}
+
+.Targets-title {
+  background-color: #E9692C;
+  font-weight: bold;
+  color: white;
+}
+
+.Meals-title {
+  background-color: #265F97;
+  font-weight: bold;
+  color: white;
+}
+
+/*
 .App-logo {
   animation: App-logo-spin infinite 20s linear;
   height: 80px;
@@ -26,3 +48,6 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+*/
+
