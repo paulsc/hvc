@@ -1,6 +1,10 @@
 import React, { Component } from "react";
 import { Button, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleNotch } from '@fortawesome/free-solid-svg-icons'
+
 import "./Login.css";
+
 
 export default class Login extends Component {
   constructor(props) {
@@ -8,8 +12,11 @@ export default class Login extends Component {
 
     this.state = {
       email: "",
-      password: ""
+      password: "",
+      loading: false,
     };
+
+    this.onLoginComplete = props.onLoginComplete;
   }
 
   validateForm() {
@@ -24,18 +31,27 @@ export default class Login extends Component {
 
   handleSubmit = async event => {
     event.preventDefault();
-    console.log("SUBMIT");
-    console.log(this.state.email, this.state.password);
+    console.log("Login clicked");
+
+    this.setState({ isLoading: true });
 
     const response = await fetch(
       `/api/targets?email=${this.state.email}&password=${this.state.password}`);
     const body = await response.json();
     if (response.status !== 200) throw Error(body.message);
 
-    console.log(body);
+    this.setState({ isLoading: false });
+
+    this.onLoginComplete(body);
   }
 
   render() {
+    const { isLoading } = this.state;
+
+    let buttonCaption = isLoading ?
+      (<span><FontAwesomeIcon icon={faCircleNotch} spin /> Login</span>) : 
+      "Login";
+
     return (
       <div className="Login">
         <form>
@@ -59,14 +75,16 @@ export default class Login extends Component {
           <Button
             block
             bsSize="large"
-            disabled={!this.validateForm()}
+            disabled={isLoading || !this.validateForm()}
             type="submit"
-            onClick={this.handleSubmit}
+            onClick={!isLoading ? this.handleSubmit : null}
           >
-            Login
+            { buttonCaption }
           </Button>
         </form>
       </div>
     );
   }
 }
+
+// <i class='fa fa-circle-o-notch fa-spin'></i> 
