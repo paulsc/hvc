@@ -54,6 +54,7 @@ export default class Login extends Component {
 
     return (
       <div className="Login">
+        <img alt="logo" className="logo" src={require('./logo-cropped.png')} />
         <form>
           <FormGroup controlId="email" bsSize="large">
             <ControlLabel>Email</ControlLabel>

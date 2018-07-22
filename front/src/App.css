@@ -1,7 +1,4 @@
-body {
-  /* text-align: center; */
-  /* color: white; */
-}
+ /* COLOR SCHEME: http://paletton.com/#uid=30i0u0kpYtfg6Dwlavqtrolwjjk */
 
 @media all and (min-width: 480px) {
   .Content {
@@ -11,43 +8,36 @@ body {
   }
 }
 
+a, a:visited {
+  color: white;
+}
+
 .Targets-title {
-  background-color: #E9692C;
+  background-color: #C24910;
+  /* background-color: #E9692C; */
   font-weight: bold;
   color: white;
 }
 
-.Meals-title {
+.Meals-group .list-group-item {
+  background-color: #3F72A2;
+}
+
+.Meals-title.list-group-item {
   background-color: #265F97;
   font-weight: bold;
+}
+
+.list-group {
+  margin: 0px;
+}
+
+.list-group-item {
+  border: 0px;
+}
+
+.signout {
+  float: right;
   color: white;
 }
-
-/*
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
-}
-
-.App-header {
-  background-color: #222;
-  height: 150px;
-  padding: 20px;
-  color: white;
-}
-
-.App-title {
-  font-size: 1.5em;
-}
-
-.App-intro {
-  font-size: large;
-}
-
-@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-*/
 

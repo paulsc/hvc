@@ -2,10 +2,27 @@
 .Login form {
   padding: 20px;
 }
+
+body {
+  color: white;
+  background-image: url('./pattern-single.png');
+  background-repeat: repeat-y repeat-x;
+}
+
+.logo {
+  width: 380px;
+  display: block;
+  margin: 0 auto;
+  opacity: 0.9;
+}
  
 @media all and (min-width: 480px) {
   .Login {
     padding: 60px 0;
+  }
+
+  .logo {
+    width: 280px;
   }
 
   .Login form {
