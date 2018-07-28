@@ -11,8 +11,8 @@ export default class Login extends Component {
     super(props);
 
     this.state = {
-      email: "",
-      password: "",
+      email: "paul167@gmail.com",
+      password: "rAUBFof7?i",
       loading: false,
       loginStatus: "",
       loginProgress: "0%",
@@ -61,7 +61,7 @@ export default class Login extends Component {
 
     this.setState({ isLoading: false });
 
-    this.onLoginComplete(body);
+    this.onLoginComplete(body.targets);
   }
 
   render() {

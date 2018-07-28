@@ -8,6 +8,10 @@
   }
 }
 
+a {
+  font-weight: bold;
+}
+
 a, a:visited {
   color: white;
 }

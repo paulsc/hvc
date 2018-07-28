@@ -9,8 +9,7 @@ import Recipe from './Recipe';
 class App extends Component {
 
   state = {
-    isLoggedIn: false,
-    /*
+    isLoggedIn: true,
     targets: {
       "Calcium" : {percent: "2%", amount: "15.2mg"},
       "Fiber" : {percent: "8%", amount: "3.1g"},
@@ -20,14 +19,13 @@ class App extends Component {
       "Vit.B12" : {percent: "37%", amount: "0.9µg"},
       "Vit.C" : {percent: "11%", amount: "10.3mg"}
     }
-    */
    }
 
   onLoginComplete = (targets) => {
     console.log("Login complete! Targets:");
     console.log(targets);
     this.setState({ targets: targets });
-    this.fetchRecipes();
+    this.setState({ isLoggedIn: true });
   }
 
   handleSignout = () => {
