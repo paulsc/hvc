@@ -21,10 +21,10 @@ export default class Login extends Component {
     this.onLoginComplete = props.onLoginComplete;
 
     // Create WebSocket connection.
-    const socket = new WebSocket('ws://localhost:5000/status');
+    const socket = new WebSocket('ws://' + window.location.host +'/status');
 
     socket.addEventListener('error', function (event) {
-      console.log('error');
+      console.log('ws error', event);
     });
 
     socket.addEventListener('open', function (event) {

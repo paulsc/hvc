@@ -1,7 +1,8 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const dotenv = require('dotenv');
-const debug = require('debug')('hvc:app')
+const debug = require('debug')('hvc:app');
+const path = require('path');
 
 dotenv.config();
 const app = express();
@@ -164,6 +165,9 @@ let getTargetValues = async (page) => {
   return result;
 }
 
+app.get('*', (req,res) =>{
+    res.sendFile(path.join(__dirname + '/../front/build/index.html'));
+});
 
 app.listen(port, () => debug(`Listening on port ${port}`));
 
