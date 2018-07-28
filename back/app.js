@@ -5,6 +5,7 @@ const debug = require('debug')('hvc:app')
 
 dotenv.config();
 const app = express();
+const expressWs = require('express-ws')(app);
 const port = process.env.PORT || 5000;
 
 
@@ -27,6 +28,20 @@ else {
   debug('Running headless');
 }
 
+const sockets = [];
+app.ws('/status', function(ws, req) {
+  debug('Socket connected.');
+  sockets.push(ws);
+
+  ws.on('close', function(msg) {
+    debug('Socket closed.');
+    let res = sockets.splice(sockets.indexOf(ws), 1);
+  });
+});
+
+let broadcast = (message) => {
+  sockets.forEach((s) => { s.send(JSON.stringify(message)) });
+};
 
 app.get('/api/targets', async (req, res) => {
 
@@ -35,7 +50,8 @@ app.get('/api/targets', async (req, res) => {
 
   debug(`Got /api/targets request: ${email}`);
 
-  debug('Login in...');
+  debug('Logging in...');
+  broadcast({ progress: "10%", message: 'Logging in...' });
 
   const browser = await puppeteer.launch(puppeteerOptions);
   const page = await browser.newPage();

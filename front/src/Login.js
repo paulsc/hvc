@@ -14,9 +14,28 @@ export default class Login extends Component {
       email: "",
       password: "",
       loading: false,
+      loginStatus: "",
+      loginProgress: "0%",
     };
 
     this.onLoginComplete = props.onLoginComplete;
+
+    // Create WebSocket connection.
+    const socket = new WebSocket('ws://localhost:5000/status');
+
+    socket.addEventListener('error', function (event) {
+      console.log('error');
+    });
+
+    socket.addEventListener('open', function (event) {
+        console.log('Websocket connected');
+    });
+
+    socket.addEventListener('message', (event) => {
+        let msg = JSON.parse(event.data);
+        console.log('Message from server:', msg);
+        this.setState({ loginStatus: msg.message, loginProgress: msg.progress });
+    });
   }
 
   validateForm() {
@@ -52,6 +71,13 @@ export default class Login extends Component {
       (<span><FontAwesomeIcon icon={faCircleNotch} spin /> Login</span>) : 
       "Login";
 
+    let loginStatusStyle = {
+      background: `linear-gradient(90deg, #E9692C ${this.state.loginProgress}, #fa8a55 ${this.state.loginProgress})`
+    }
+
+    let status = this.state.loginStatus.length > 0 ?
+        <div style={loginStatusStyle} className="loginstatus">{ this.state.loginStatus }</div> : '';
+
     return (
       <div className="Login">
         <img alt="logo" className="logo" src={require('./logo-cropped.png')} />
@@ -82,7 +108,8 @@ export default class Login extends Component {
           >
             { buttonCaption }
           </Button>
-        </form>
+          { status }
+         </form>
       </div>
     );
   }
