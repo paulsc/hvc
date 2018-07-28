@@ -82,6 +82,9 @@ export default class Home extends Component {
         //let calls = res.data.map(recipe => api(`${recipe.id}/information`) );
 
         this.setState({ recipes: res.data });
+
+        localStorage.setItem('recipes', JSON.stringify(res.data));
+
       })
  
   }

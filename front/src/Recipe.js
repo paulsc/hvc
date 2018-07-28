@@ -24,6 +24,28 @@ export default class Recipe extends Component {
 
         let info = this.state.information;
 
+        let recipes = JSON.parse(localStorage.getItem('recipes'));
+        let meta;
+        for (let result of recipes) {
+            if (result.id == this.props.match.params.id) {
+                meta = result;
+                delete(meta.image);
+                delete(meta.imageType);
+                delete(meta.id);
+                delete(meta.title);
+                break;
+            }
+        }
+
+        let metaitems = [];
+
+        console.log('META', meta);
+        for (let key in meta) {
+            metaitems.push(
+                <ListGroupItem key={key}>{capitalize(key)}: {meta[key]}</ListGroupItem>
+            )
+        }
+
         return (
             <div className="Content">
                 <ListGroup className="Meals-group">
@@ -32,7 +54,7 @@ export default class Recipe extends Component {
                     </ListGroupItem>
                     <ListGroupItem>
                         <a href={info.sourceUrl}>
-                            <img style={{width: '100%'}} src={info.image} /> 
+                            <img style={{width: '100%'}} alt='pic' src={info.image} /> 
                         </a>
                     </ListGroupItem>
                     <ListGroupItem>
@@ -41,6 +63,7 @@ export default class Recipe extends Component {
                     <ListGroupItem>
                         Vegan: {info.vegan ? 'yes' : 'no'}
                     </ListGroupItem>
+                    { metaitems }
                     <ListGroupItem>
                         <a href={info.sourceUrl} alt="link" tareget="blank">Recipe</a>
                         &nbsp; | &nbsp;
@@ -55,4 +78,8 @@ export default class Recipe extends Component {
 
     }
 
+}
+
+function capitalize(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
