@@ -6,6 +6,7 @@ const debug = require('debug')('hvc:app')
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
+app.use( express.static( `${__dirname}/../front/build` ) );
 
 
 const LOGIN_POPUP_BTN = '#loginli > button';
@@ -141,7 +142,6 @@ let getTargetValues = async (page) => {
 
   return result;
 }
-
 
 
 app.listen(port, () => debug(`Listening on port ${port}`));
