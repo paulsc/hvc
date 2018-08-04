@@ -82,7 +82,7 @@ export default class Home extends Component {
   fetchRecipes(offset) {
 
     if (!offset) offset = 0;
-    let url = `findByNutrients?offset=${this.state.offset}&`;
+    let url = `findByNutrients?offset=${offset}&`;
     for (let key of Object.keys(this.state.form)) {
       let apiKey = nutrientMappings[key].apiKey;
       url += `${apiKey}=${this.state.form[key]}&`
