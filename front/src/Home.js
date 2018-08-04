@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { ListGroup, ListGroupItem } from "react-bootstrap";
 import { Link } from 'react-router-dom';
+import FontAwesome from 'react-fontawesome';
 
 import api from './api';
 
@@ -8,13 +9,15 @@ export default class Home extends Component {
 
   state = {
     recipes: [],
+    isRefreshing: false,
+    offset: 0,
   }
 
   componentDidMount() {
     this.fetchRecipes();
   }
 
-  caclulateRequirements() {
+  calculateRequirements() {
     let targets = this.props.targets;
 
     for (let key of Object.keys(targets)) {
@@ -30,6 +33,8 @@ export default class Home extends Component {
       targets[key].required = requiredAmount;
       targets[key].unit = amountUnit;
       targets[key].current = amountNum;
+
+      console.log(requiredAmount)
     }
 
     this.setState( { targets: targets } );
@@ -55,40 +60,63 @@ export default class Home extends Component {
   'number=10&offset=0&random=false'
   */
 
-  fetchRecipes() {
-    this.caclulateRequirements();
+  fetchRecipes(offset) {
+
+    if (!offset) offset = 0;
+
+    this.calculateRequirements();
 
     let targets = this.props.targets;
     console.log(targets);
 
     //let folateGrams = targets["Folate"].required * 1000;
+    // number, offset: query string params for pagination
 
-    let url = `findByNutrients?` 
-      + `mincalcium=${targets["Calcium"].required.toFixed(2)}&` 
-      + `minFiber=${targets["Fiber"].required.toFixed(2)}&`
-      //+ `minFolate=${folateGrams.toFixed(2)}&`
-      + `miniron=${targets["Iron"].required.toFixed(2)}&`
-      + `minVitaminA=${targets["Vit.A"].required.toFixed(2)}&`
-      + `minvitaminb12=${targets["Vit.B12"].required.toFixed(2)}&`
-      + `minvitaminc=${targets["Vit.C"].required.toFixed(2)}`
+    let url = `findByNutrients?offset=${this.state.offset}&`;
 
-    console.log(url);
+    if (!isNaN(targets["Calcium"].required)) url += `mincalcium=${targets["Calcium"].required.toFixed(2)}&`;
+    if (!isNaN(targets["Fiber"].required)) url += `minFiber=${targets["Fiber"].required.toFixed(2)}&`;
+    url //=+ `minFolate=${folateGrams.toFixed(2)}&`;
+    if (!isNaN(targets["Iron"].required)) url +=`miniron=${targets["Iron"].required.toFixed(2)}&`;
+    if (!isNaN(targets["Vit.A"].required)) url +=`minVitaminA=${targets["Vit.A"].required.toFixed(2)}&`;
+    if (!isNaN(targets["Vit.B12"].required)) url +=`minvitaminb12=${targets["Vit.B12"].required.toFixed(2)}&`;
+    if (!isNaN(targets["Vit.C"].required)) url +=`minvitaminc=${targets["Vit.C"].required.toFixed(2)}&`;
+
+    console.log("FETCH:", url);
 
     api(url)
       .then(res => {
-
         console.log("RES", res.data);
 
-        //let calls = res.data.map(recipe => api(`${recipe.id}/information`) );
-
-        this.setState({ recipes: res.data });
+        this.setState((oldState) => { 
+          let recipes = oldState.recipes.concat(res.data)
+          return { 
+            recipes: recipes,
+            offset: offset
+          };
+        });
 
         localStorage.setItem('recipes', JSON.stringify(res.data));
-
       })
  
   }
 
+  handleSignout = () => {
+    localStorage.removeItem('email');
+    localStorage.removeItem('password');
+    localStorage.removeItem('targets');
+    window.location.reload();
+  }
+
+  handleRefresh = () => {
+    this.setState({ isRefreshing: true });
+    this.props.onRefresh();
+  }
+
+  more = () => {
+    console.log('more clicked');
+    this.fetchRecipes(this.state.offset + 10);
+  }
 
   render() {
     let listitems = [];
@@ -116,13 +144,21 @@ export default class Home extends Component {
         <ListGroup className="Targets-group">
           <ListGroupItem className="Targets-title">
             Today's Targets
-            <a href="#" className="signout" onClick={this.handleSignout}>Sign out</a>
+            <a href="#" title="Sign out" className="signout" onClick={this.handleSignout}>
+              <FontAwesome name='sign-out' />
+            </a>
+            <a href="#" title="Refresh" className="refresh" onClick={this.handleRefresh}>
+              { this.state.isRefreshing ? 
+              <FontAwesome spin name='refresh' /> :
+              <FontAwesome name='refresh' /> }
+            </a>
           </ListGroupItem>
           { listitems }
         </ListGroup>
         <ListGroup className="Meals-group">
           <ListGroupItem className="Meals-title">Meals</ListGroupItem>
           { recipeitems }
+          <ListGroupItem className="Meals-title"><a href="#" onClick={this.more}>More...</a></ListGroupItem>
         </ListGroup>
       </div>
     );

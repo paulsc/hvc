@@ -6,22 +6,26 @@ import { faCircleNotch } from '@fortawesome/free-solid-svg-icons'
 import "./Login.css";
 
 
-export default class Login extends Component {
+class Login extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      email: "paul167@gmail.com",
-      password: "rAUBFof7?i",
+      email: this.props.autoLoginEmail,
+      password: this.props.autoLoginPassword,
       loading: false,
-      loginStatus: "",
+      loginStatus: "Food for the hasi.",
       loginProgress: "0%",
     };
 
     this.onLoginComplete = props.onLoginComplete;
 
     // Create WebSocket connection.
-    const socket = new WebSocket('ws://' + window.location.host +'/status');
+    let url = 'ws://' + window.location.host + '/status';
+    if (window.location.host.indexOf('localhost') !== -1) {
+      url = 'ws://localhost:5000/status';
+    }
+    const socket = new WebSocket(url);
 
     socket.addEventListener('error', function (event) {
       console.log('ws error', event);
@@ -38,6 +42,13 @@ export default class Login extends Component {
     });
   }
 
+  componentDidMount() {
+    console.log('LOGIN DID MOUNT');
+    if (this.state.email) {
+      this.handleSubmit();
+    }
+  }
+
   validateForm() {
     return this.state.email.length > 0 && this.state.password.length > 0;
   }
@@ -49,17 +60,26 @@ export default class Login extends Component {
   }
 
   handleSubmit = async event => {
-    event.preventDefault();
+    if (event) {
+      event.preventDefault();
+    }
+
     console.log("Login clicked");
 
     this.setState({ isLoading: true });
 
-    const response = await fetch(
-      `/api/targets?email=${this.state.email}&password=${this.state.password}`);
-    const body = await response.json();
-    if (response.status !== 200) throw Error(body.message);
+    const body = await getTargets(this.state.email, this.state.password);
 
     this.setState({ isLoading: false });
+
+    if (body.error === "login invalid") {
+      console.log("Login invalid.");
+      return;
+    }
+
+    // login success
+    localStorage.setItem("email", this.state.email);
+    localStorage.setItem("password", this.state.password);
 
     this.onLoginComplete(body.targets);
   }
@@ -72,16 +92,17 @@ export default class Login extends Component {
       "Login";
 
     let loginStatusStyle = {
-      background: `linear-gradient(90deg, #E9692C ${this.state.loginProgress}, #fa8a55 ${this.state.loginProgress})`
+      background: `linear-gradient(90deg, rgb(154, 50, 0, 0.7) ${this.state.loginProgress}, rgb(250, 138, 85, 0.7) ${this.state.loginProgress})`
     }
 
-    let status = this.state.loginStatus.length > 0 ?
-        <div style={loginStatusStyle} className="loginstatus">{ this.state.loginStatus }</div> : '';
+    //let status = this.state.loginStatus.length > 0 ?
+    let status = <div style={loginStatusStyle} className="loginstatus">{ this.state.loginStatus }</div>;
 
     return (
       <div className="Login">
         <img alt="logo" className="logo" src={require('./logo-cropped.png')} />
         <form>
+          { status }
           <FormGroup controlId="email" bsSize="large">
             <ControlLabel>Email</ControlLabel>
             <FormControl
@@ -108,11 +129,19 @@ export default class Login extends Component {
           >
             { buttonCaption }
           </Button>
-          { status }
          </form>
       </div>
     );
   }
 }
 
-// <i class='fa fa-circle-o-notch fa-spin'></i> 
+let getTargets = async (email, password) => {
+  const response = await fetch(
+    `/api/targets?email=${email}&password=${password}`);
+  const body = await response.json();
+  if (response.status !== 200) throw Error(body.message);
+  return body;
+}
+
+
+export { Login, getTargets }

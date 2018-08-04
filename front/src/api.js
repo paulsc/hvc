@@ -13,7 +13,6 @@ let api = (endpoint) => {
 
     let url = `${HOST}/${endpoint}`;
 
-    /*
     if (endpoint.indexOf('information') !== -1) {
         url = `/recipeinfo.json`;
     }
@@ -21,7 +20,6 @@ let api = (endpoint) => {
     if (endpoint.indexOf('findByNutrients') !== -1) {
         url = `findbynutrients.json`;
     }
-    */
 
     console.log('requesting...', url);
     return axios.get(url, options);
