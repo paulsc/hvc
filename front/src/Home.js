@@ -1,24 +1,40 @@
 import React, { Component } from 'react';
-import { ListGroup, ListGroupItem } from "react-bootstrap";
+import { ListGroup, ListGroupItem, FormControl, Form } from "react-bootstrap";
 import { Link } from 'react-router-dom';
 import FontAwesome from 'react-fontawesome';
 
 import api from './api';
+
+const nutrientMappings = {
+  "Calcium": { apiKey: "mincalcium", unit: "mg" },
+  "Fiber": { apiKey: "minFiber", unit: "g"},
+  // "Folate": "minFolate",
+  "Iron": { apiKey: "miniron", unit: "mg"},
+  "Vit.A": { apiKey: "minVitaminA", unit: "IU"},
+  "Vit.B12": { apiKey: "minvitaminb12", unit: "µg"},
+  "Vit.C": { apiKey: "minvitaminc", unit: "mg"},
+}
 
 export default class Home extends Component {
 
   state = {
     recipes: [],
     isRefreshing: false,
+    isRecipesRefreshing: false,
     offset: 0,
+    fetchUrl: null,
+    form: {},
   }
 
   componentDidMount() {
-    this.fetchRecipes();
+    this.calculateRequirements(() => {
+      this.fetchRecipes();
+    });
   }
 
-  calculateRequirements() {
+  calculateRequirements(callback) {
     let targets = this.props.targets;
+    let form = {};
 
     for (let key of Object.keys(targets)) {
       let { percent, amount } = targets[key];
@@ -34,10 +50,13 @@ export default class Home extends Component {
       targets[key].unit = amountUnit;
       targets[key].current = amountNum;
 
-      console.log(requiredAmount)
+      console.log(key, requiredAmount)
+      if (key != "Folate") { // had an issue with folate
+        form[key] = requiredAmount.toFixed(1);
+      }
     }
 
-    this.setState( { targets: targets } );
+    this.setState( { targets: targets, form: form }, callback );
   }
 
   // https://market.mashape.com/spoonacular/recipe-food-nutrition#search-recipes-by-nutrients
@@ -63,42 +82,36 @@ export default class Home extends Component {
   fetchRecipes(offset) {
 
     if (!offset) offset = 0;
-
-    this.calculateRequirements();
-
-    let targets = this.props.targets;
-    console.log(targets);
-
-    //let folateGrams = targets["Folate"].required * 1000;
-    // number, offset: query string params for pagination
-
     let url = `findByNutrients?offset=${this.state.offset}&`;
-
-    if (!isNaN(targets["Calcium"].required)) url += `mincalcium=${targets["Calcium"].required.toFixed(2)}&`;
-    if (!isNaN(targets["Fiber"].required)) url += `minFiber=${targets["Fiber"].required.toFixed(2)}&`;
-    url //=+ `minFolate=${folateGrams.toFixed(2)}&`;
-    if (!isNaN(targets["Iron"].required)) url +=`miniron=${targets["Iron"].required.toFixed(2)}&`;
-    if (!isNaN(targets["Vit.A"].required)) url +=`minVitaminA=${targets["Vit.A"].required.toFixed(2)}&`;
-    if (!isNaN(targets["Vit.B12"].required)) url +=`minvitaminb12=${targets["Vit.B12"].required.toFixed(2)}&`;
-    if (!isNaN(targets["Vit.C"].required)) url +=`minvitaminc=${targets["Vit.C"].required.toFixed(2)}&`;
-
-    console.log("FETCH:", url);
+    for (let key of Object.keys(this.state.form)) {
+      let apiKey = nutrientMappings[key].apiKey;
+      url += `${apiKey}=${this.state.form[key]}&`
+    }
+    console.log("FETCH", url);
 
     api(url)
       .then(res => {
         console.log("RES", res.data);
 
         this.setState((oldState) => { 
-          let recipes = oldState.recipes.concat(res.data)
+
+          let recipes;
+          if (offset != 0) {
+            recipes = oldState.recipes.concat(res.data)
+          }
+          else {
+            recipes = res.data;
+          }
+
           return { 
             recipes: recipes,
-            offset: offset
+            offset: offset,
+            isRecipesRefreshing: false
           };
         });
 
         localStorage.setItem('recipes', JSON.stringify(res.data));
       })
- 
   }
 
   handleSignout = () => {
@@ -111,6 +124,24 @@ export default class Home extends Component {
   handleRefresh = () => {
     this.setState({ isRefreshing: true });
     this.props.onRefresh();
+  }
+
+  handleRecipeRefresh = () => {
+    this.setState({ isRecipesRefreshing: true });
+    this.fetchRecipes();
+  }
+
+  handleChange = (e) => {
+    let key = e.currentTarget.name;
+    let value = e.currentTarget.value;
+    this.setState(oldState => {
+      let newForm = Object.assign({}, oldState.form);
+      newForm[key] = value;
+      return { 
+        form: newForm,
+        offset: 0
+      };
+    });
   }
 
   more = () => {
@@ -139,6 +170,23 @@ export default class Home extends Component {
       );
     }
 
+    const renderFormItem = (key) => {
+
+      if (!key) return;
+      let target = this.props.targets[key].required;
+      if (!target) return;
+      target = target.toFixed(1);
+      let unit = nutrientMappings[key].unit;
+
+      return (
+          <ListGroupItem style={{display: 'flex'}}>
+            <span style={{flexGrow: 1}}>{key} min: </span>
+            <FormControl name={key} type="text" value={this.state.form[key]} onChange={this.handleChange} /> 
+            <span style={{ width: '50px', paddingLeft: '10px' }}>{unit}</span>
+          </ListGroupItem>
+      );
+    }
+
     return (
       <div className="Content">
         <ListGroup className="Targets-group">
@@ -156,7 +204,25 @@ export default class Home extends Component {
           { listitems }
         </ListGroup>
         <ListGroup className="Meals-group">
-          <ListGroupItem className="Meals-title">Meals</ListGroupItem>
+          <ListGroupItem className="Meals-title">
+            Search filters
+         </ListGroupItem>
+          <Form inline>
+              { renderFormItem("Fiber") }
+              { renderFormItem("Iron") }
+              { renderFormItem("Calcium") }
+              { renderFormItem("Vit.A") }
+              { renderFormItem("Vit.C") }
+              { renderFormItem("Vit.B12") }
+          </Form>
+          <ListGroupItem className="Meals-title">
+            Results
+            <a href="#" title="Refresh" className="refresh" onClick={this.handleRecipeRefresh}>
+              { this.state.isRecipesRefreshing ? 
+              <FontAwesome spin name='refresh' /> :
+              <FontAwesome name='refresh' /> }
+            </a>
+          </ListGroupItem>
           { recipeitems }
           <ListGroupItem className="Meals-title"><a href="#" onClick={this.more}>More...</a></ListGroupItem>
         </ListGroup>
