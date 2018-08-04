@@ -6,4 +6,3 @@ npm run build
 cd ..
 cd back
 npm install
-systemctl restart hvc
