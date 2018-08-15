@@ -17,11 +17,15 @@ const PASSWORD_INPUT = '#login_user_form > input:nth-child(2)';
 const LOGIN_BTN = '#login-button';
 const INVALID_LOGIN = '#email_error';
 
-const TARGETS = "#cronometerApp > div > div:nth-child(1) > div > table > tbody > tr > " 
-  + "td:nth-child(2) > div > div.GL-TVABCGUB.diary_side_box";
-const ALL_TARGETS = TARGETS + " div.GL-TVABCOT";
+// const TARGETS = "#cronometerApp > div > div:nth-child(1) > div > table > tbody > tr > " 
+//   + "td:nth-child(2) > div > div.GL-TVABCGUB.diary_side_box";
+// const ALL_TARGETS = TARGETS + " div.GL-TVABCOT";
 
-const puppeteerOptions = { headless: true };
+const TARGETS = "#cronometerApp > div > div:nth-child(1) > div > table > tbody > tr > " 
+  + "td:nth-child(2) > div > div.GL-TVABCNVB.diary_side_box";
+const ALL_TARGETS = TARGETS + " div.GL-TVABCCU";
+
+const puppeteerOptions = { headless: false };
 let page;
 
 const sockets = [];
@@ -104,9 +108,9 @@ let targetClosedErrorHandler = (err) => {
 }
 
 let getTargets = async (page) => {
-  const hoverSel = TARGETS + " > div:nth-child(3) > div > div:nth-child(2)";
-
   let targetArray = await getTargetValues(page);
+
+  debug("Got target array", targetArray);
 
   let progress = 50;
   for (let i = 2; i <= 8; i++) {
@@ -121,6 +125,7 @@ let getTargets = async (page) => {
 }
 
 let fetchHoverValue = async (page, targetArray, index) => {
+  debug("Enabling manual hover index:", index);
   const hoverSel = TARGETS + ` > div:nth-child(3) > div > div:nth-child(${index})`;
   await page.hover(hoverSel);
   debug(`Fetching hover value index (${index})`);
@@ -128,9 +133,11 @@ let fetchHoverValue = async (page, targetArray, index) => {
   await page.waitFor(100);
 
   let values = await getTargetValues(page);
+  // debug("Got values after hover:", values);
   let targetArrayIndex = index - 1;
   let hoverVal = values[targetArrayIndex].join("");
 
+  debug("Read value:", hoverVal);
   targetArray[targetArrayIndex][2] = hoverVal;
 
   return hoverVal;
@@ -149,14 +156,14 @@ let parseTargetValues = (data) => {
 }
 
 let getTargetValues = async (page) => {
-  const ALL_TARGETS = TARGETS + " div.GL-TVABCOT";
-
   let result = await page.evaluate((sel) => {
     let divs = Array.from(document.querySelectorAll(sel));
     let data = divs.map(d => { 
       return [ 
-        d.querySelector('.GL-TVABCAU').innerText, 
-        d.querySelector('.GL-TVABCNT').innerText 
+        // d.querySelector('.GL-TVABCAU').innerText, 
+        // d.querySelector('.GL-TVABCNT').innerText 
+        d.querySelector('.GL-TVABCEU').innerText, 
+        d.querySelector('.GL-TVABCBU').innerText 
       ] 
     });
     return data;
