@@ -25,7 +25,7 @@ const TARGETS = "#cronometerApp > div > div:nth-child(1) > div > table > tbody >
   + "td:nth-child(2) > div > div.GL-TVABCNVB.diary_side_box";
 const ALL_TARGETS = TARGETS + " div.GL-TVABCCU";
 
-const puppeteerOptions = { headless: false };
+const puppeteerOptions = { headless: true };
 let page;
 
 const sockets = [];
