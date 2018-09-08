@@ -22,7 +22,7 @@ const INVALID_LOGIN = '#email_error';
 // const ALL_TARGETS = TARGETS + " div.GL-TVABCOT";
 
 const TARGETS = "#cronometerApp > div > div:nth-child(1) > div > table > tbody > tr > " 
-  + "td:nth-child(2) > div > div.GL-TVABCNVB.diary_side_box";
+  + "td:nth-child(2) > div > div.diary_side_box";
 const ALL_TARGETS = TARGETS + " div.GL-TVABCCU";
 
 const puppeteerOptions = { headless: true };
